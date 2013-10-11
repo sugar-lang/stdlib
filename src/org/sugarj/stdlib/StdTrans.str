@@ -35,13 +35,13 @@ strategies
   generate-desugared :
     (selected, position, ast, path, project-path) -> (filename, result)
     where
-      filename := <guarantee-extension(|"desug")> path;
+      filename := $[[<remove-extension> path]-desug.aterm];
       result   := <desugar-main; bottomup(strip-annos)> selected // we just return the input term
 
   generate-desugared-analysis :
     (selected, position, ast, path, project-path) -> (filename, result)
     where
-      filename := <guarantee-extension(|"desug")> path;
+      filename := $[[<remove-extension> path]-desug.aterm];
       result   := <desugar-main; nice-analysis-data-term> selected // we just return the input term
   
   generate-aterm:
