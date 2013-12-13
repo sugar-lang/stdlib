@@ -1,0 +1,52 @@
+module org/sugarj/transformations/analysis/Data
+imports
+  org/sugarj/languages/Stratego
+  org/sugarj/languages/Sugar
+  org/sugarj/stdlib/StdTrans
+rules
+  desugar = changed-tree(desugar-analyze)
+  desugar-analyze : Analyses(strats) -> Rules(<map(strat-to-analysis)> strats)
+  strat-to-analysis = !SDefNoArgs("start-analysis" , Call(SVar("change-annotations-only"), [<id>]))
+  
+  analyze-main = repeat(start-analysis)
+  analyze-debug = analyze-main; nice-analysis-data-term
+  start-analysis = fail
+  change-annotations-only(s) = ?t; s; !t
+  
+  get-analysis-data(|key) = prim("SUGARJ_ANALYSIS_get_data",key)
+  put-analysis-data(|key,val) = prim("SUGARJ_ANALYSIS_put_data",key,val)
+  remove-analysis-data(|key) = prim("SUGARJ_ANALYSIS_remove_data",key)
+  get-all-analysis-data = prim("SUGARJ_ANALYSIS_get_all_data")
+  put-all-analysis-data(|map) = prim("SUGARJ_ANALYSIS_put_all_data",map)
+  
+  get-anno(|key) = get-analysis-data(|key)
+  put-anno(|key,val) = put-analysis-data(|key,val)
+  rm-anno(|key) = remove-analysis-data(|key)
+  
+  structurally-equal = ?(c#(xs),d#(ys)); <equal> (c,d); <zip(structurally-equal)> (xs, ys)
+  
+  nice-analysis-data-term =
+    bottomup({list:
+      try(
+        where(get-all-analysis-data; hashtable-getlist => list);
+	      if <?[]> list
+	        then id
+	        else put-annotation(|"analysis-data",list)
+	      end)
+    })
+    
+  put-annotation(|name,value) =
+    where(![(name, value) | <(get-annotations;filter(not(?(name,_))) <+ ![])>] => annos);
+    !(<id>, annos); set-annotations
+
+  
+  debug-analysis = debug-analysis(id)
+  debug-analysis(s) = where(nice-analysis-data-term; debug(s))
+  write-to-string-analysis = nice-analysis-data-term; write-to-string
+
+rules
+  // desugar =
+  //   changed-tree(desugar-analyses)
+  //   
+  // desugar-analyses : 
+  // 	Analyses(strats) -> Strategies()
