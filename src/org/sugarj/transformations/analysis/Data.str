@@ -6,12 +6,18 @@ imports
 rules
   desugar = changed-tree(desugar-analyze)
   desugar-analyze : Analyses(strats) -> Rules(<map(strat-to-analysis)> strats)
-  strat-to-analysis = !SDefNoArgs("start-analysis" , Call(SVar("change-annotations-only"), [<id>]))
+  strat-to-analysis = !SDefNoArgs("start-analysis" , Call(SVar("changed-tree-or-annotations"), [<id>]))
   
   analyze-main = repeat(start-analysis)
   analyze-debug = analyze-main; nice-analysis-data-term
   start-analysis = fail
-  change-annotations-only(s) = ?t; s; !t
+  
+  changed-tree-or-annotations(s) = 
+    ?t;
+    where(get-all-analysis-data => data);
+    s;
+    (not(equal(|t)) <+ 
+      where(get-all-analysis-data; not(equal(|data))))
   
   external get-analysis-data(|key)
   external put-analysis-data(|key,val)
@@ -29,10 +35,10 @@ rules
     bottomup({list:
       try(
         where(get-all-analysis-data; hashtable-getlist => list);
-	      if <?[]> list
-	        then id
-	        else put-annotation(|"analysis-data",list)
-	      end)
+        if <?[]> list
+          then id
+          else put-annotation(|"analysis-data",list)
+        end)
     })
     
   put-annotation(|name,value) =
@@ -49,4 +55,4 @@ rules
   //   changed-tree(desugar-analyses)
   //   
   // desugar-analyses : 
-  // 	Analyses(strats) -> Strategies()
+  //   Analyses(strats) -> Strategies()
