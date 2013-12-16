@@ -13,11 +13,11 @@ rules
   start-analysis = fail
   change-annotations-only(s) = ?t; s; !t
   
-  get-analysis-data(|key) = prim("SUGARJ_ANALYSIS_get_data",key)
-  put-analysis-data(|key,val) = prim("SUGARJ_ANALYSIS_put_data",key,val)
-  remove-analysis-data(|key) = prim("SUGARJ_ANALYSIS_remove_data",key)
-  get-all-analysis-data = prim("SUGARJ_ANALYSIS_get_all_data")
-  put-all-analysis-data(|map) = prim("SUGARJ_ANALYSIS_put_all_data",map)
+  external get-analysis-data(|key)
+  external put-analysis-data(|key,val)
+  external remove-analysis-data(|key)
+  external get-all-analysis-data(|)
+  external put-all-analysis-data(|map)
   
   get-anno(|key) = get-analysis-data(|key)
   put-anno(|key,val) = put-analysis-data(|key,val)
