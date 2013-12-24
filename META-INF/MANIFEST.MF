@@ -11,3 +11,5 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Export-Package: org.sugarj.languages,
  org.sugarj.stdlib;uses:="org.eclipse.ui.plugin,org.osgi.framework"
+ org.sugarj.stdlib;uses:="org.eclipse.ui.plugin,org.osgi.framework",
+Eclipse-BundleShape: dir
