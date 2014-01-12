@@ -27,7 +27,10 @@ rules
   external get-all-analysis-data(|)
   external put-all-analysis-data(|map)
   external get-all-analysis-data-as-list(|)
+  external load-analysis-data(|)
+  external clear-analysis-data(|)
   
+  // legacy strategies
   get-anno(|key) = get-analysis-data(|key)
   put-anno(|key,val) = put-analysis-data(|key,val)
   rm-anno(|key) = remove-analysis-data(|key)
@@ -35,17 +38,13 @@ rules
   structurally-equal = ?(c#(xs),d#(ys)); <equal> (c,d); <zip(structurally-equal)> (xs, ys)
   
   nice-analysis-data-term =
-    bottomup({list:
+    topdown({list:
       try(
         where(get-all-analysis-data-as-list => list);
-        put-annotation(|"analysis-data",list))
+        !(<id>, list); set-annotations
+      )
     })
-    
-  put-annotation(|name,value) =
-    where(![(name, value) | <(get-annotations;filter(not(?(name,_))) <+ ![])>] => annos);
-    !(<id>, annos); set-annotations
 
-  
   debug-analysis = debug-analysis(id)
   debug-analysis(s) = where(nice-analysis-data-term; debug(s))
   write-to-string-analysis = nice-analysis-data-term; write-to-string

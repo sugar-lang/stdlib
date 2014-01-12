@@ -3,15 +3,19 @@ imports
   org/sugarj/languages/Stratego
   org/sugarj/languages/Sugar
   org/sugarj/stdlib/StdTrans
+  org/sugarj/transformations/analysis/Data
 rules
   sugarj-analyze:
     (ast, path, project-path) -> (ast, errors, warnings, notes)
     with
       editor-init;
-      // try(analyze);
-      errors   := <collect-all(constraint-error; ensure-list, conc)> ast;
-      warnings := <collect-all(constraint-warning; ensure-list, conc)> ast;
-      notes    := <collect-all(constraint-note; ensure-list, conc)> ast
+      <load-analysis-data> ast;
+      finally(
+          errors   := <collect-all(constraint-error; ensure-list, conc)> ast
+        ; warnings := <collect-all(constraint-warning; ensure-list, conc)> ast
+        ; notes    := <collect-all(constraint-note; ensure-list, conc)> ast
+        , clear-analysis-data)
+      
 
     editor-init =
       // Ensure all dynamic rules are properly scoped

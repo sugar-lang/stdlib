@@ -6,42 +6,77 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.WeakHashMap;
 
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoString;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.IStrategoTuple;
 import org.spoofax.interpreter.terms.ITermPrinter;
+import org.spoofax.jsglr.client.imploder.IToken;
+import org.spoofax.jsglr.client.imploder.ImploderAttachment;
 import org.spoofax.terms.StrategoList;
 import org.spoofax.terms.StrategoString;
 import org.spoofax.terms.StrategoTerm;
 import org.spoofax.terms.StrategoTuple;
 import org.spoofax.terms.Term;
 import org.spoofax.terms.TermFactory;
+import org.spoofax.terms.attachments.AbstractTermAttachment;
+import org.spoofax.terms.attachments.TermAttachmentType;
+import org.spoofax.terms.attachments.VolatileTermAttachmentType;
 import org.strategoxt.lang.Context;
 import org.strategoxt.lang.JavaInteropRegisterer;
 import org.strategoxt.lang.Strategy;
 
 public class AnalysisDataInterop {
+  
+  private static class TermKey {
+    private IStrategoTerm term;
+    private int offset;
+    
+    public TermKey(IStrategoTerm term) {
+      this.term = term;
+      IToken token = ImploderAttachment.getLeftToken(term);
+      if (token != null)
+        offset = token.getStartOffset();
+    }
+    
+    public int hashCode() {
+      return 63 * offset + term.hashCode();
+    }
+    
+    public boolean equals(Object o) {
+      return o instanceof TermKey && 
+          ((TermKey) o).offset == offset &&
+          ((TermKey) o).term.equals(term);
+    }
+  }
 
-  public static AnalysisDataInterop instance = new AnalysisDataInterop();
+  private Map<TermKey, Map<String, IStrategoTerm>> analysisData =
+      new HashMap<TermKey, Map<String, IStrategoTerm>>();
   
-  private AnalysisDataInterop() { }
+  private Strategy[] strategies = new Strategy[] {
+      new get_analysis_data_0_1(analysisData),
+      new put_analysis_data_0_2(analysisData), 
+      new remove_analysis_data_0_1(analysisData),
+      new get_all_analysis_data_0_0(analysisData),
+      new put_all_analysis_data_0_1(analysisData),
+      new get_all_analysis_data_as_list_0_0(analysisData),
+      new load_analysis_data_0_0(analysisData),
+      new clear_analysis_data_0_0(analysisData)
+    };
   
-  public Strategy[] getStrategies() {
-    WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData = new WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>>();
-    return new Strategy[] {
-        new get_analysis_data_0_1(analysisData),
-        new put_analysis_data_0_2(analysisData), 
-        new remove_analysis_data_0_1(analysisData),
-        new get_all_analysis_data_0_0(analysisData),
-        new put_all_analysis_data_0_1(analysisData),
-        new get_all_analysis_data_as_list_0_0(analysisData)
-      };
+  public AnalysisDataInterop() {
   }
   
-  public JavaInteropRegisterer getInteropRegisterer() {
+  public Strategy[] getStrategies() {
+    return strategies;
+  }
+  
+  public void storeAnalysisData(IStrategoTerm term) {
+    term.putAttachment(new AnalysisDataAttachment(analysisData));
+  }
+  
+  public JavaInteropRegisterer createInteropRegisterer() {
     class InteropRegisterer extends JavaInteropRegisterer{
       public InteropRegisterer() {
         super(getStrategies());
@@ -111,9 +146,37 @@ public class AnalysisDataInterop {
     
   }
   
+  public static class AnalysisDataAttachment extends AbstractTermAttachment {
+
+    private static final long serialVersionUID = -6951936326210493125L;
+
+    public static final TermAttachmentType<AnalysisDataAttachment> TYPE = 
+        new VolatileTermAttachmentType<>(AnalysisDataAttachment.class);
+    
+    private HashMap<TermKey, Map<String, IStrategoTerm>> analysisData;
+    
+    public AnalysisDataAttachment(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
+      this.analysisData = new HashMap<TermKey, Map<String, IStrategoTerm>>(analysisData);
+    }
+    
+    public HashMap<TermKey, Map<String, IStrategoTerm>> getAnalysisData() {
+      return this.analysisData;
+    }
+
+    public static HashMap<TermKey, Map<String, IStrategoTerm>> getAnalysisData(IStrategoTerm term) {
+      AnalysisDataAttachment at = term.getAttachment(TYPE);
+      if (at == null)
+        return null;
+      return at.getAnalysisData();
+    }
+        
+    @Override
+    public TermAttachmentType<?> getAttachmentType() { return TYPE; }
+  }
+  
   public class get_analysis_data_0_1 extends Strategy {
-    WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData;
-    public get_analysis_data_0_1(WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData) {
+    Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    public get_analysis_data_0_1(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = analysisData;
     }
     
@@ -124,7 +187,8 @@ public class AnalysisDataInterop {
         return null;
       }
       
-      Map<String, IStrategoTerm> map = analysisData.get(term);
+      TermKey tkey = new TermKey(term);
+      Map<String, IStrategoTerm> map = analysisData.get(tkey);
       if (map == null)
         return null;
 
@@ -137,8 +201,8 @@ public class AnalysisDataInterop {
   }
   
   public class put_analysis_data_0_2 extends Strategy {
-    WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData;
-    public put_analysis_data_0_2(WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData) {
+    Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    public put_analysis_data_0_2(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = analysisData;
     }
 
@@ -149,10 +213,11 @@ public class AnalysisDataInterop {
         return null;
       }
 
-      Map<String, IStrategoTerm> map = analysisData.get(term);
+      TermKey tkey = new TermKey(term);
+      Map<String, IStrategoTerm> map = analysisData.get(tkey);
       if (map == null) {
         map = new HashMap<String, IStrategoTerm>();
-        analysisData.put(term, map);
+        analysisData.put(tkey, map);
       }
       
       map.put(Term.asJavaString(key), val);
@@ -162,8 +227,8 @@ public class AnalysisDataInterop {
   }
   
   public class remove_analysis_data_0_1 extends Strategy {
-    WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData;
-    public remove_analysis_data_0_1(WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData) {
+    Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    public remove_analysis_data_0_1(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = analysisData;
     }
 
@@ -174,7 +239,7 @@ public class AnalysisDataInterop {
         return null;
       }
 
-      Map<String, IStrategoTerm> map = analysisData.get(term);
+      Map<String, IStrategoTerm> map = analysisData.get(new TermKey(term));
       if (map == null)
         return null;
 
@@ -187,24 +252,25 @@ public class AnalysisDataInterop {
   }
   
   public class get_all_analysis_data_0_0 extends Strategy {
-    WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData;
-    public get_all_analysis_data_0_0(WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData) {
+    Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    public get_all_analysis_data_0_0(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = analysisData;
     }
 
     @Override
     public IStrategoTerm invoke(Context context, IStrategoTerm term) {
-      Map<String, IStrategoTerm> map = analysisData.get(term);
+      TermKey key = new TermKey(term);
+      Map<String, IStrategoTerm> map = analysisData.get(key);
       if (map == null)
         return null;
       
-      return new AnalysisDataTerm(new HashMap<String, IStrategoTerm>(analysisData.get(term)));
+      return new AnalysisDataTerm(new HashMap<String, IStrategoTerm>(analysisData.get(key)));
     }
   }
   
   public class put_all_analysis_data_0_1 extends Strategy {
-    WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData;
-    public put_all_analysis_data_0_1(WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData) {
+    Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    public put_all_analysis_data_0_1(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = analysisData;
     }
 
@@ -216,10 +282,11 @@ public class AnalysisDataInterop {
       }
       Map<String, IStrategoTerm> newmap = ((AnalysisDataTerm) arg).analysisData;
       
-      Map<String, IStrategoTerm> map = analysisData.get(term);
+      TermKey key = new TermKey(term);
+      Map<String, IStrategoTerm> map = analysisData.get(key);
       if (map == null) {
         map = new HashMap<String, IStrategoTerm>();
-        analysisData.put(term, map);
+        analysisData.put(key, map);
       }
 
       for (Entry<String, IStrategoTerm> e : newmap.entrySet()) {
@@ -231,14 +298,14 @@ public class AnalysisDataInterop {
   }
   
   public class get_all_analysis_data_as_list_0_0 extends Strategy {
-    WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData;
-    public get_all_analysis_data_as_list_0_0(WeakHashMap<IStrategoTerm, Map<String, IStrategoTerm>> analysisData) {
+    Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    public get_all_analysis_data_as_list_0_0(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = analysisData;
     }
 
     @Override
     public IStrategoTerm invoke(Context context, IStrategoTerm term) {
-      Map<String, IStrategoTerm> map = analysisData.get(term);
+      Map<String, IStrategoTerm> map = analysisData.get(new TermKey(term));
       if (map == null)
         return null;
       
@@ -251,6 +318,46 @@ public class AnalysisDataInterop {
       }
       
       return list;
+    }
+  }
+  
+  public class load_analysis_data_0_0 extends Strategy {
+    Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    public load_analysis_data_0_0(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
+      this.analysisData = analysisData;
+    }
+
+    @Override
+    public IStrategoTerm invoke(Context context, IStrategoTerm term) {
+      HashMap<TermKey, Map<String, IStrategoTerm>> termData = AnalysisDataAttachment.getAnalysisData(term);
+      
+      if (termData == null) {
+        context.getIOAgent().printError(this.getName() + " could not load analysis-data attachment from term");
+        return null;
+      }
+        
+      for (Entry<TermKey, Map<String, IStrategoTerm>> e : termData.entrySet()) {
+        Map<String, IStrategoTerm> omap = analysisData.get(e.getKey());
+        if (omap == null)
+          analysisData.put(e.getKey(), e.getValue());
+        else
+          omap.putAll(e.getValue());
+      }
+      
+      return term;
+    }
+  }
+  
+  public class clear_analysis_data_0_0 extends Strategy {
+    Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    public clear_analysis_data_0_0(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
+      this.analysisData = analysisData;
+    }
+
+    @Override
+    public IStrategoTerm invoke(Context context, IStrategoTerm term) {
+      analysisData.clear();
+      return term;
     }
   }
 }
