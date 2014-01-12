@@ -40,14 +40,21 @@ public class AnalysisDataInterop {
         offset = token.getStartOffset();
     }
     
+    @Override
     public int hashCode() {
       return 63 * offset + term.hashCode();
     }
     
+    @Override
     public boolean equals(Object o) {
       return o instanceof TermKey && 
           ((TermKey) o).offset == offset &&
           ((TermKey) o).term.equals(term);
+    }
+    
+    @Override
+    public String toString() {
+      return offset + "@" + term.toString();
     }
   }
 
@@ -58,8 +65,8 @@ public class AnalysisDataInterop {
       new get_analysis_data_0_1(analysisData),
       new put_analysis_data_0_2(analysisData), 
       new remove_analysis_data_0_1(analysisData),
-      new get_all_analysis_data_0_0(analysisData),
-      new put_all_analysis_data_0_1(analysisData),
+      new get_analysis_data_term_0_0(analysisData),
+      new analysis_data_changed_0_1(analysisData),
       new get_all_analysis_data_as_list_0_0(analysisData),
       new load_analysis_data_0_0(analysisData),
       new clear_analysis_data_0_0(analysisData)
@@ -87,15 +94,15 @@ public class AnalysisDataInterop {
 
   
 
-  public static class AnalysisDataTerm extends StrategoTerm {
+  public static class DataTerm<T> extends StrategoTerm {
 
     private static final long serialVersionUID = -4166241735936861836L;
 
-    private Map<String, IStrategoTerm> analysisData;
+    private T data;
     
-    public AnalysisDataTerm(Map<String, IStrategoTerm> map) {
+    public DataTerm(T data) {
       super(IStrategoTerm.IMMUTABLE);
-      this.analysisData = map;
+      this.data = data;
     }
     
     @Override
@@ -124,7 +131,7 @@ public class AnalysisDataInterop {
 
     @Override
     public void writeAsString(Appendable arg0, int arg1) throws IOException {
-      arg0.append("AnalysisData(" + analysisData.toString().replace('{', '[').replace('}', ']').replace('=', ',') + "),");
+      arg0.append("Data(" + data.toString().replace('{', '[').replace('}', ']').replace('=', ',') + "),");
     }
 
     @Override
@@ -134,14 +141,15 @@ public class AnalysisDataInterop {
 
     @Override
     protected boolean doSlowMatch(IStrategoTerm arg0, int arg1) {
-      boolean res = arg0 instanceof AnalysisDataTerm 
-                 && ((AnalysisDataTerm) arg0).analysisData.equals(analysisData);
+      @SuppressWarnings("unchecked")
+      boolean res = arg0 instanceof DataTerm 
+                 && ((DataTerm<T>) arg0).data.equals(data);
       return res;
     }
 
     @Override
     protected int hashFunction() {
-      return analysisData.hashCode();
+      return data.hashCode();
     }
     
   }
@@ -251,49 +259,43 @@ public class AnalysisDataInterop {
     }
   }
   
-  public class get_all_analysis_data_0_0 extends Strategy {
+  public class get_analysis_data_term_0_0 extends Strategy {
     Map<TermKey, Map<String, IStrategoTerm>> analysisData;
-    public get_all_analysis_data_0_0(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
+    public get_analysis_data_term_0_0(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = analysisData;
     }
 
     @Override
     public IStrategoTerm invoke(Context context, IStrategoTerm term) {
-      TermKey key = new TermKey(term);
-      Map<String, IStrategoTerm> map = analysisData.get(key);
-      if (map == null)
-        return null;
+      Map<TermKey, Map<String, IStrategoTerm>> data = new HashMap<>();
       
-      return new AnalysisDataTerm(new HashMap<String, IStrategoTerm>(analysisData.get(key)));
+      for (Entry<TermKey, Map<String, IStrategoTerm>> e : analysisData.entrySet())
+        data.put(e.getKey(), new HashMap<>(e.getValue()));
+      
+      return new DataTerm<>(data);
     }
   }
   
-  public class put_all_analysis_data_0_1 extends Strategy {
+  public class analysis_data_changed_0_1 extends Strategy {
     Map<TermKey, Map<String, IStrategoTerm>> analysisData;
-    public put_all_analysis_data_0_1(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
+    public analysis_data_changed_0_1(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = analysisData;
     }
 
     @Override
     public IStrategoTerm invoke(Context context, IStrategoTerm term, IStrategoTerm arg) {
-      if (arg.getTermType() != IStrategoTerm.BLOB || !(arg instanceof AnalysisDataTerm)) {
+      if (arg.getTermType() != IStrategoTerm.BLOB || !(arg instanceof DataTerm<?>)) {
         context.getIOAgent().printError(this.getName() + " requires an analysis data as term argument");
         return null;
       }
-      Map<String, IStrategoTerm> newmap = ((AnalysisDataTerm) arg).analysisData;
       
-      TermKey key = new TermKey(term);
-      Map<String, IStrategoTerm> map = analysisData.get(key);
-      if (map == null) {
-        map = new HashMap<String, IStrategoTerm>();
-        analysisData.put(key, map);
-      }
-
-      for (Entry<String, IStrategoTerm> e : newmap.entrySet()) {
-        map.put(e.getKey(), e.getValue());
-      }
+      @SuppressWarnings("unchecked")
+      Map<TermKey, Map<String, IStrategoTerm>> old = ((DataTerm<Map<TermKey, Map<String, IStrategoTerm>>>) arg).data;
       
-      return term;
+      if (analysisData.equals(old))
+        return null;
+      else
+        return term;
     }
   }
   
