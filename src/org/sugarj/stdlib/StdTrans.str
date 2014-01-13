@@ -43,7 +43,7 @@ strategies
     (selected, position, ast, path, project-path) -> (filename, result)
     where
       filename := $[[<remove-extension> path]-desug.aterm];
-      <load-analysis-data> ast;
+      <load-analysis-data <+ warn(|"Could not load analysis data.")> ast;
       result   := <desugar-main; nice-analysis-data-term> selected;
       clear-analysis-data
   
@@ -56,7 +56,7 @@ strategies
     (selected, position, ast, path, project-path) -> (filename, result)
     with
       filename := <guarantee-extension(|"aterm")> path;
-      <load-analysis-data> ast;
+      <load-analysis-data <+ warn(|"Could not load analysis data.")> ast;
       result   := <nice-analysis-data-term> selected;
       clear-analysis-data
   
