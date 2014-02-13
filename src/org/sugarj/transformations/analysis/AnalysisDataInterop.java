@@ -162,17 +162,21 @@ public class AnalysisDataInterop {
     public static final TermAttachmentType<AnalysisDataAttachment> TYPE = 
         new VolatileTermAttachmentType<>(AnalysisDataAttachment.class);
     
-    private HashMap<TermKey, Map<String, IStrategoTerm>> analysisData;
+    private Map<TermKey, Map<String, IStrategoTerm>> analysisData;
+    
+    public AnalysisDataAttachment() {
+      this.analysisData = Collections.<TermKey, Map<String, IStrategoTerm>>emptyMap();
+    }
     
     public AnalysisDataAttachment(Map<TermKey, Map<String, IStrategoTerm>> analysisData) {
       this.analysisData = new HashMap<TermKey, Map<String, IStrategoTerm>>(analysisData);
     }
     
-    public HashMap<TermKey, Map<String, IStrategoTerm>> getAnalysisData() {
+    public Map<TermKey, Map<String, IStrategoTerm>> getAnalysisData() {
       return this.analysisData;
     }
 
-    public static HashMap<TermKey, Map<String, IStrategoTerm>> getAnalysisData(IStrategoTerm term) {
+    public static Map<TermKey, Map<String, IStrategoTerm>> getAnalysisData(IStrategoTerm term) {
       AnalysisDataAttachment at = term.getAttachment(TYPE);
       if (at == null)
         return null;
@@ -332,7 +336,7 @@ public class AnalysisDataInterop {
 
     @Override
     public IStrategoTerm invoke(Context context, IStrategoTerm term) {
-      HashMap<TermKey, Map<String, IStrategoTerm>> termData = AnalysisDataAttachment.getAnalysisData(term);
+      Map<TermKey, Map<String, IStrategoTerm>> termData = AnalysisDataAttachment.getAnalysisData(term);
       
       if (termData == null) {
         context.getIOAgent().printError(this.getName() + " could not load analysis-data attachment from term");
