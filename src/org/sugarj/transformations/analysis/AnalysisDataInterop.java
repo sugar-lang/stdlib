@@ -1,6 +1,7 @@
 package org.sugarj.transformations.analysis;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,7 +31,9 @@ import org.strategoxt.lang.Strategy;
 
 public class AnalysisDataInterop {
   
-  private static class TermKey {
+  public static class TermKey implements Serializable {
+    private static final long serialVersionUID = -1055204598368915963L;
+  
     private IStrategoTerm term;
     private int offset;
     
@@ -74,6 +77,12 @@ public class AnalysisDataInterop {
     };
   
   public AnalysisDataInterop() {
+  }
+  
+  public AnalysisDataInterop(Map<TermKey, Map<String, IStrategoTerm>> map) {
+    this();
+    if (map != null)
+      analysisData.putAll(map);
   }
   
   public Strategy[] getStrategies() {
