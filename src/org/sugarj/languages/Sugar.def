@@ -5,6 +5,9 @@ imports org/sugarj/languages/Sdf2
         org/sugarj/languages/EditorServices
 exports
   context-free syntax
+    ToplevelDeclaration+ -> CompilationUnit {cons("CompilationUnit")}
+	
+  context-free syntax
     Grammar -> ExtensionElem {cons("grammar-elem")}
     Transformation -> ExtensionElem {cons("transformation-elem")}
     EditorServiceSection -> ExtensionElem {cons("editor-elem")}
