@@ -6,5 +6,6 @@ signature constructors
 
 rules
   resolve-model-import = prim("SUGARJ_resolve_model_import")
+  current-model-name = prim("SUGARJ_current_model_name")
   current-transformation-name = prim("SUGARJ_current_transformation_name")
   
