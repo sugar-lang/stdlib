@@ -63,7 +63,7 @@ public class AnalysisDataInterop {
   }
 
   private Map<TermKey, Map<String, IStrategoTerm>> analysisData =
-      new WeakHashMap<TermKey, Map<String, IStrategoTerm>>();
+      new HashMap<TermKey, Map<String, IStrategoTerm>>();
   
   private Strategy[] strategies = new Strategy[] {
       new get_analysis_data_0_1(analysisData),
