@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.WeakHashMap;
 
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoString;
@@ -62,10 +61,10 @@ public class AnalysisDataInterop {
     }
   }
 
-  private Map<TermKey, Map<String, IStrategoTerm>> analysisData =
+  private final Map<TermKey, Map<String, IStrategoTerm>> analysisData =
       new HashMap<TermKey, Map<String, IStrategoTerm>>();
   
-  private Strategy[] strategies = new Strategy[] {
+  private final Strategy[] strategies = new Strategy[] {
       new get_analysis_data_0_1(analysisData),
       new put_analysis_data_0_2(analysisData), 
       new remove_analysis_data_0_1(analysisData),

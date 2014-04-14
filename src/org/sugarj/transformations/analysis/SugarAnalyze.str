@@ -14,7 +14,7 @@ rules
           errors   := <collect-all(constraint-error; ensure-list, conc)> ast
         ; warnings := <collect-all(constraint-warning; ensure-list, conc)> ast
         ; notes    := <collect-all(constraint-note; ensure-list, conc)> ast
-        , clear-analysis-data)
+        , id)
       
 
     editor-init =

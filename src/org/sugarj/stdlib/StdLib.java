@@ -20,7 +20,7 @@ import org.sugarj.common.path.RelativePath;
  */
 public class StdLib {
 
-  public static final String VERSION = "stdlib-0.2b";
+  public static final String VERSION = "stdlib-0.3";
   
   public static Path stdLibDir;
   private static Path stdLibTmpDir;
