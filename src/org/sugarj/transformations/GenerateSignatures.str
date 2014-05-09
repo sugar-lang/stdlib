@@ -86,7 +86,7 @@ rules
 
   get-symbol-type :
     sym -> []
-    where <is-layout> sym
+    where <is-layout-type> sym
 
   get-symbol-type :
     sym -> ConstType(Sort(name, []))
@@ -149,10 +149,10 @@ rules
     where <get-symbol-name> sym => name
     
     
-  is-layout = ?layout()
-  is-layout = ?cf(<is-layout>)
-  is-layout = ?lex(<is-layout>)
-  is-layout = ?opt(<is-layout>)
-  is-layout = ?iter(<is-layout>)
-  is-layout = map(is-layout)
+  is-layout-type = ?layout()
+  is-layout-type = ?cf(<is-layout-type>)
+  is-layout-type = ?lex(<is-layout-type>)
+  is-layout-type = ?opt(<is-layout-type>)
+  is-layout-type = ?iter(<is-layout-type>)
+  is-layout-type = map(is-layout-type)
   
