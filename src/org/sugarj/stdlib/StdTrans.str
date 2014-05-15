@@ -45,8 +45,7 @@ strategies
     where
       filename := $[[<remove-extension> path]-desug.aterm];
       <load-analysis-data <+ warn(|"Could not load analysis data.")> ast;
-      result   := <desugar-main; nice-analysis-data-term> selected;
-      clear-analysis-data
+      result   := <desugar-main; nice-analysis-data-term> selected
   
   generate-aterm:
     (selected, position, ast, path, project-path) -> (filename, ast)
@@ -58,8 +57,7 @@ strategies
     with
       filename := <guarantee-extension(|"aterm")> path;
       <load-analysis-data <+ warn(|"Could not load analysis data.")> ast;
-      result   := <nice-analysis-data-term> selected;
-      clear-analysis-data
+      result   := <nice-analysis-data-term> selected
   
 signature
   constructors
