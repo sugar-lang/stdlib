@@ -1,0 +1,10 @@
+module  org/sugarj/stdlib/eclipse 
+
+rules
+	
+  project-path = prim("SSL_EXT_projectpath")
+  
+  plugin-path = prim("SSL_EXT_pluginpath")
+    
+  refresh-workspace-file:
+    path -&gt; &lt;prim("SSL_EXT_refreshresource", path)&gt;

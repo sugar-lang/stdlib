@@ -1,0 +1,55 @@
+module org/sugarj/stdlib/origins
+
+imports
+
+  org/sugarj/stdlib/eclipse	
+
+strategies
+  
+  origin-term      = prim("SSL_EXT_origin_term", &lt;id&gt;)
+  origin-text      = prim("SSL_EXT_origin_text", &lt;id&gt;)
+  origin-offset    = prim("SSL_EXT_origin_offset", &lt;id&gt;)
+  origin-location  = prim("SSL_EXT_origin_location", &lt;id&gt;)
+  origin-line      = origin-location =&gt; (&lt;id&gt;, _, _, _)
+  origin-column    = origin-location =&gt; (_, &lt;id&gt;, _, _)
+  origin-file      = prim("SSL_EXT_origin_file", &lt;id&gt;)
+  origin-strip     = prim("SSL_EXT_origin_strip", &lt;id&gt;)
+  origin-equal(|t) = prim("SSL_EXT_origin_equal", &lt;id&gt;, t)
+
+	origin-location-offset = prim("SSL_EXT_origin_location_offset", &lt;id&gt;)
+	origin-location-offset-set(|origin-location-offset) = prim("SSL_EXT_set_origin_location_offset", origin-location-offset)
+
+  origin-language-description =
+    prim("SSL_EXT_languagedescription", &lt;id&gt;)
+
+  origin-language =
+    origin-file; 
+    origin-language-description;
+    Fst
+  
+  origin-surrounding-comments =
+    prim("SSL_EXT_origin_surrounding_comments", &lt;origin-language&gt;, &lt;id&gt;)
+    
+  origin-documentation-comment =
+    origin-surrounding-comments;
+    filter(string-as-chars(documentation-comment-chars));
+    concat-strings
+  
+  documentation-comment-chars:
+    ['*' | c*] -&gt; &lt;ltrim(' ' + '\t' + '\n' + '\r')&gt; c*
+
+  origin-track-forced(s) =
+    ![&lt;id&gt;]; all(s); ?[&lt;id&gt;]
+
+  origin-relative-path:
+    trm -&gt; rel-path
+    where
+      full-path := &lt;origin-file&gt; trm;
+      len-project-prefix := &lt;project-path; string-length; inc&gt;;
+      rel-path := &lt;string-as-chars(drop(|len-project-prefix))&gt; full-path
+
+	origin-debug:
+		term -&gt; term
+		with
+			&lt;(origin-term     &lt;+ !"Failed"); debug(!"origin-trm: ")&gt; term;
+			&lt;(origin-location &lt;+ !"Failed"); debug(!"origin-loc: ")&gt; term

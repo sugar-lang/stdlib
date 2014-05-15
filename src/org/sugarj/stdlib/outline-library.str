@@ -1,0 +1,130 @@
+module org/sugarj/stdlib/outline-library
+ 
+
+imports
+
+  org/sugarj/stdlib/origins
+  org/sugarj/stdlib/annotations	
+  
+strategies
+  
+  /**
+   * Creates an outline given a strategy s1 that rewrites AST nodes to outline labels.
+   * Only AST nodes for which s1 succeed end up in the outline.
+   *
+   * Example:
+   *   outline = simple-label-outline(to-outline-label)
+   *   to-outline-label: Entity(name, _) -&gt; name
+   *   to-outline-label: Property(name, _) -&gt; name
+   */
+  simple-label-outline(s1) = collect-om(to-outline-node(s1, fail), conc)
+  
+  /**
+   * Similar to simple-label-outline(s1), but with an additional strategy s2 that rewrites
+   * AST nodes to outline nodes. Strategy s2 gets priority over strategy s1 in case both succeed.
+   *
+   * Example:
+   *   outline = custom-label-outline(to-outline-label, to-outline-node)
+   *   to-outline-label: Entity(name, _) -&gt; name
+   *   to-outline-node: Property(name, _) -&gt; Node(name, [Node("dummy", [])])
+   */
+  custom-label-outline(s1, s2) = collect-om(origin-track-forced(s2) &lt;+ to-outline-node(s1, s2), conc)
+
+  /**
+  * @internal
+  * Note: we annotate labels with random numbers to guarantee that similar labels do not share the
+  * same in-memory term, which would cause origins to be overwritten.
+  */  
+  to-outline-node(s1, s2):
+    term -&gt; Node(label, children)
+    where
+      random := &lt;next-random&gt;;
+      label := &lt;origin-track-forced(s1; term-to-outline-label; add-annotation(|random); remove-annotations(?random))&gt; term;
+      children := &lt;get-arguments; custom-label-outline(s1, s2)&gt; term
+      
+  /**
+  * @internal
+  */  
+  term-to-outline-label =
+    is-string 
+      &lt;+
+    ?term{a}; origin-text; ?label; !label{a}
+      &lt;+
+    write-to-string // fallback
+
+rules
+
+rules
+  
+  /**
+  * Given a string of literals (e.g. "context-free syntax"), converts the string
+  * into an outline label by providing it with origin information. The result is
+  * that the correct portion of text in the editor gets selected, upon selecting
+  * nodes with this label in the outline view.
+  * Note: this strategy is useful for constructing outline labels for unnamed
+  * elements. 
+  *
+  * @param term (e.g. 'context-free-syntax([])') provides the origin.
+  */  
+  literals-to-outline-label(|term):
+    literals -&gt; literals
+    where
+      literals' := &lt;split-at-space&gt; literals;
+      (a, b, c, d, e) := &lt;origin-location-offset&gt; term;
+      (before, after) := &lt;split-before&gt; (&lt;origin-text&gt; term, &lt;Hd&gt; literals');
+      start-offset := &lt;add&gt; (d, &lt;string-length&gt; before);
+      end-offset := &lt;get-literals-end-offset(|literals', start-offset)&gt; after;
+      &lt;origin-location-offset-set(|(a, b, c, start-offset, end-offset))&gt; literals
+      
+  /**
+  * @internal
+  */      
+  get-literals-end-offset(|literals, start-offset):
+    text -&gt; end-offset
+    where
+      (before, after) := &lt;split-after&gt; (text, &lt;Hd&gt; literals);
+      end-offset := &lt;get-literals-end-offset(|&lt;Tl&gt; literals, &lt;add&gt; (start-offset, &lt;string-length&gt; before))&gt; after
+
+  /**
+  * @internal
+  */
+  get-literals-end-offset(|literals, start-offset):
+    _ -&gt; &lt;dec&gt; start-offset
+    where
+      [] := literals
+
+rules
+
+  /**
+  * Given a term application, gets the portion of the origin text up to the start
+  * of the origin text of the first subterm. If the result is an empty string, it
+  * gets the origin text of the first subterm instead. Excess whitespace, such as
+  * tabs and new lines, are removed.
+  */
+  origin-text-at-start:
+    term -&gt; result'
+    where
+      (cons, args) := &lt;explode-term&gt; term;
+      offset1 := &lt;origin-offset; ?(&lt;id&gt;, _)&gt; term;
+      offset2 := &lt;Hd; origin-offset; ?(&lt;id&gt;, _)&gt; args;
+      offset-diff := &lt;subt&gt; (offset2, offset1);
+      if (0 := offset-diff)
+      then result' := &lt;Hd; origin-text; guarantee-one-space-separation&gt; args
+      else result := &lt;origin-text; explode-string; take(!offset-diff); rtrim(is-whitespace + test('\n')); implode-string&gt; term;
+        result' := &lt;guarantee-one-space-separation&gt; result;
+        (a, b, c, d, e) := &lt;origin-location-offset&gt; term;
+        &lt;origin-location-offset-set(|(a, b, c, d, &lt;add&gt; (d, &lt;string-length; dec&gt; result)))&gt; result'
+      end
+  
+  /**
+  * @internal
+  */
+  guarantee-one-space-separation = string-as-chars(
+      map(try(test('\n' + ' '); !' '));
+      foldr(![], rm-double-space &lt;+ MkCons)
+    )
+  rm-double-space: (' ', l@[' '|xs]) -&gt; l
+  
+signature constructors
+  
+  Node: label * children -&gt; Node
