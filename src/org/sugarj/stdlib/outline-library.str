@@ -20,8 +20,8 @@ strategies
    *
    * Example:
    *   outline = simple-label-outline(to-outline-label)
-   *   to-outline-label: Entity(name, _) -&gt; name
-   *   to-outline-label: Property(name, _) -&gt; name
+   *   to-outline-label: Entity(name, _) -> name
+   *   to-outline-label: Property(name, _) -> name
    */
   simple-label-outline(s1) = collect-om(to-outline-node(s1, fail), conc)
   
@@ -31,10 +31,10 @@ strategies
    *
    * Example:
    *   outline = custom-label-outline(to-outline-label, to-outline-node)
-   *   to-outline-label: Entity(name, _) -&gt; name
-   *   to-outline-node: Property(name, _) -&gt; Node(name, [Node("dummy", [])])
+   *   to-outline-label: Entity(name, _) -> name
+   *   to-outline-node: Property(name, _) -> Node(name, [Node("dummy", [])])
    */
-  custom-label-outline(s1, s2) = collect-om(origin-track-forced(s2) &lt;+ to-outline-node(s1, s2), conc)
+  custom-label-outline(s1, s2) = collect-om(origin-track-forced(s2) <+ to-outline-node(s1, s2), conc)
 
   /**
   * @internal
@@ -42,20 +42,20 @@ strategies
   * same in-memory term, which would cause origins to be overwritten.
   */  
   to-outline-node(s1, s2):
-    term -&gt; Node(label, children)
+    term -> Node(label, children)
     where
-      random := &lt;next-random&gt;;
-      label := &lt;origin-track-forced(s1; term-to-outline-label; add-annotation(|random); remove-annotations(?random))&gt; term;
-      children := &lt;get-arguments; custom-label-outline(s1, s2)&gt; term
+      random := <next-random>;
+      label := <origin-track-forced(s1; term-to-outline-label; add-annotation(|random); remove-annotations(?random))> term;
+      children := <get-arguments; custom-label-outline(s1, s2)> term
       
   /**
   * @internal
   */  
   term-to-outline-label =
     is-string 
-      &lt;+
+      <+
     ?term{a}; origin-text; ?label; !label{a}
-      &lt;+
+      <+
     write-to-string // fallback
 
 rules
@@ -73,29 +73,29 @@ rules
   * @param term (e.g. 'context-free-syntax([])') provides the origin.
   */  
   literals-to-outline-label(|term):
-    literals -&gt; literals
+    literals -> literals
     where
-      literals' := &lt;split-at-space&gt; literals;
-      (a, b, c, d, e) := &lt;origin-location-offset&gt; term;
-      (before, after) := &lt;split-before&gt; (&lt;origin-text&gt; term, &lt;Hd&gt; literals');
-      start-offset := &lt;add&gt; (d, &lt;string-length&gt; before);
-      end-offset := &lt;get-literals-end-offset(|literals', start-offset)&gt; after;
-      &lt;origin-location-offset-set(|(a, b, c, start-offset, end-offset))&gt; literals
+      literals' := <split-at-space> literals;
+      (a, b, c, d, e) := <origin-location-offset> term;
+      (before, after) := <split-before> (<origin-text> term, <Hd> literals');
+      start-offset := <add> (d, <string-length> before);
+      end-offset := <get-literals-end-offset(|literals', start-offset)> after;
+      <origin-location-offset-set(|(a, b, c, start-offset, end-offset))> literals
       
   /**
   * @internal
   */      
   get-literals-end-offset(|literals, start-offset):
-    text -&gt; end-offset
+    text -> end-offset
     where
-      (before, after) := &lt;split-after&gt; (text, &lt;Hd&gt; literals);
-      end-offset := &lt;get-literals-end-offset(|&lt;Tl&gt; literals, &lt;add&gt; (start-offset, &lt;string-length&gt; before))&gt; after
+      (before, after) := <split-after> (text, <Hd> literals);
+      end-offset := <get-literals-end-offset(|<Tl> literals, <add> (start-offset, <string-length> before))> after
 
   /**
   * @internal
   */
   get-literals-end-offset(|literals, start-offset):
-    _ -&gt; &lt;dec&gt; start-offset
+    _ -> <dec> start-offset
     where
       [] := literals
 
@@ -108,18 +108,18 @@ rules
   * tabs and new lines, are removed.
   */
   origin-text-at-start:
-    term -&gt; result'
+    term -> result'
     where
-      (cons, args) := &lt;explode-term&gt; term;
-      offset1 := &lt;origin-offset; ?(&lt;id&gt;, _)&gt; term;
-      offset2 := &lt;Hd; origin-offset; ?(&lt;id&gt;, _)&gt; args;
-      offset-diff := &lt;subt&gt; (offset2, offset1);
+      (cons, args) := <explode-term> term;
+      offset1 := <origin-offset; ?(<id>, _)> term;
+      offset2 := <Hd; origin-offset; ?(<id>, _)> args;
+      offset-diff := <subt> (offset2, offset1);
       if (0 := offset-diff)
-      then result' := &lt;Hd; origin-text; guarantee-one-space-separation&gt; args
-      else result := &lt;origin-text; explode-string; take(!offset-diff); rtrim(is-whitespace + test('\n')); implode-string&gt; term;
-        result' := &lt;guarantee-one-space-separation&gt; result;
-        (a, b, c, d, e) := &lt;origin-location-offset&gt; term;
-        &lt;origin-location-offset-set(|(a, b, c, d, &lt;add&gt; (d, &lt;string-length; dec&gt; result)))&gt; result'
+      then result' := <Hd; origin-text; guarantee-one-space-separation> args
+      else result := <origin-text; explode-string; take(!offset-diff); rtrim(is-whitespace + test('\n')); implode-string> term;
+        result' := <guarantee-one-space-separation> result;
+        (a, b, c, d, e) := <origin-location-offset> term;
+        <origin-location-offset-set(|(a, b, c, d, <add> (d, <string-length; dec> result)))> result'
       end
   
   /**
@@ -127,10 +127,10 @@ rules
   */
   guarantee-one-space-separation = string-as-chars(
       map(try(test('\n' + ' '); !' '));
-      foldr(![], rm-double-space &lt;+ MkCons)
+      foldr(![], rm-double-space <+ MkCons)
     )
-  rm-double-space: (' ', l@[' '|xs]) -&gt; l
+  rm-double-space: (' ', l@[' '|xs]) -> l
   
 signature constructors
   
-  Node: label * children -&gt; Node
+  Node: label * children -> Node

@@ -12,21 +12,21 @@ imports
 
 strategies
   
-  origin-term      = prim("SSL_EXT_origin_term", &lt;id&gt;)
-  origin-text      = prim("SSL_EXT_origin_text", &lt;id&gt;)
-  origin-offset    = prim("SSL_EXT_origin_offset", &lt;id&gt;)
-  origin-location  = prim("SSL_EXT_origin_location", &lt;id&gt;)
-  origin-line      = origin-location =&gt; (&lt;id&gt;, _, _, _)
-  origin-column    = origin-location =&gt; (_, &lt;id&gt;, _, _)
-  origin-file      = prim("SSL_EXT_origin_file", &lt;id&gt;)
-  origin-strip     = prim("SSL_EXT_origin_strip", &lt;id&gt;)
-  origin-equal(|t) = prim("SSL_EXT_origin_equal", &lt;id&gt;, t)
+  origin-term      = prim("SSL_EXT_origin_term", <id>)
+  origin-text      = prim("SSL_EXT_origin_text", <id>)
+  origin-offset    = prim("SSL_EXT_origin_offset", <id>)
+  origin-location  = prim("SSL_EXT_origin_location", <id>)
+  origin-line      = origin-location => (<id>, _, _, _)
+  origin-column    = origin-location => (_, <id>, _, _)
+  origin-file      = prim("SSL_EXT_origin_file", <id>)
+  origin-strip     = prim("SSL_EXT_origin_strip", <id>)
+  origin-equal(|t) = prim("SSL_EXT_origin_equal", <id>, t)
 
-	origin-location-offset = prim("SSL_EXT_origin_location_offset", &lt;id&gt;)
+	origin-location-offset = prim("SSL_EXT_origin_location_offset", <id>)
 	origin-location-offset-set(|origin-location-offset) = prim("SSL_EXT_set_origin_location_offset", origin-location-offset)
 
   origin-language-description =
-    prim("SSL_EXT_languagedescription", &lt;id&gt;)
+    prim("SSL_EXT_languagedescription", <id>)
 
   origin-language =
     origin-file; 
@@ -34,7 +34,7 @@ strategies
     Fst
   
   origin-surrounding-comments =
-    prim("SSL_EXT_origin_surrounding_comments", &lt;origin-language&gt;, &lt;id&gt;)
+    prim("SSL_EXT_origin_surrounding_comments", <origin-language>, <id>)
     
   origin-documentation-comment =
     origin-surrounding-comments;
@@ -42,20 +42,20 @@ strategies
     concat-strings
   
   documentation-comment-chars:
-    ['*' | c*] -&gt; &lt;ltrim(' ' + '\t' + '\n' + '\r')&gt; c*
+    ['*' | c*] -> <ltrim(' ' + '\t' + '\n' + '\r')> c*
 
   origin-track-forced(s) =
-    ![&lt;id&gt;]; all(s); ?[&lt;id&gt;]
+    ![<id>]; all(s); ?[<id>]
 
   origin-relative-path:
-    trm -&gt; rel-path
+    trm -> rel-path
     where
-      full-path := &lt;origin-file&gt; trm;
-      len-project-prefix := &lt;project-path; string-length; inc&gt;;
-      rel-path := &lt;string-as-chars(drop(|len-project-prefix))&gt; full-path
+      full-path := <origin-file> trm;
+      len-project-prefix := <project-path; string-length; inc>;
+      rel-path := <string-as-chars(drop(|len-project-prefix))> full-path
 
 	origin-debug:
-		term -&gt; term
+		term -> term
 		with
-			&lt;(origin-term     &lt;+ !"Failed"); debug(!"origin-trm: ")&gt; term;
-			&lt;(origin-location &lt;+ !"Failed"); debug(!"origin-loc: ")&gt; term
+			<(origin-term     <+ !"Failed"); debug(!"origin-trm: ")> term;
+			<(origin-location <+ !"Failed"); debug(!"origin-loc: ")> term

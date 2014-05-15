@@ -17,23 +17,23 @@ rules // TODO: does not belong to editor, move to a new 'utils' directory
 		collect-one(s)
 
   add-annotation(|a):
-    t{a*} -&gt; t{a, a*} where &lt;not(is-list)&gt; a
+    t{a*} -> t{a, a*} where <not(is-list)> a
   
   add-annotations(|a'*):
-    t{a*} -&gt; t{a''*} where &lt;is-list&gt; a'*; a''* := [a'*, a*] 
+    t{a*} -> t{a''*} where <is-list> a'*; a''* := [a'*, a*] 
 
   remove-annotations(s):
-    t{a*} -&gt; t{a'*}
+    t{a*} -> t{a'*}
     where
-      a'* := &lt;remove-all(s)&gt; a*
+      a'* := <remove-all(s)> a*
       
   replace-annotation(s|a):
-    t{a*} -&gt; t{a, a'*}
+    t{a*} -> t{a, a'*}
     where
-      a'* := &lt;remove-all(s)&gt; a*
+      a'* := <remove-all(s)> a*
       
   replace-annotations(s|a'*):
-    t{a*} -&gt; t{a'*, a''*}
+    t{a*} -> t{a'*, a''*}
     where
-      a''* := &lt;remove-all(s)&gt; a*
+      a''* := <remove-all(s)> a*
 

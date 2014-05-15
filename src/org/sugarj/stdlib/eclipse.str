@@ -14,4 +14,4 @@ rules
   plugin-path = prim("SSL_EXT_pluginpath")
     
   refresh-workspace-file:
-    path -&gt; &lt;prim("SSL_EXT_refreshresource", path)&gt;
+    path -> <prim("SSL_EXT_refreshresource", path)>
