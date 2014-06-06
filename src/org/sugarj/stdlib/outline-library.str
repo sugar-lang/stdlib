@@ -10,6 +10,9 @@ imports
   org/sugarj/stdlib/annotations	
   
 strategies
+  outline = fail
+
+strategies
   
   /**
    * Creates an outline given a strategy s1 that rewrites AST nodes to outline labels.

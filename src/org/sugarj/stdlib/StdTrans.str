@@ -75,7 +75,3 @@ signature
     Cons : a * List(a) -> List(a)
     Nil  : List(a)
     Conc : List(a) * List(a) -> List(a)
-
-strategies
-  outline = fail
-
