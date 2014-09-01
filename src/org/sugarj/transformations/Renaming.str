@@ -3,9 +3,12 @@ imports
   libstratego-lib
   org/sugarj/languages/Stratego
 
+signature constructors
+	NoRename : A -> A
+
 rules
-  apply-renamings = where(prim("SUGARJ_current_renamings") => renamings); try(rename-decl(|renamings))
-  apply-renamings(|renamings) = try(rename-decl(|renamings))
+  apply-renamings = where(prim("SUGARJ_current_renamings") => renamings); apply-renamings(|renamings)
+  apply-renamings(|renamings) = try(rename-decl(|renamings)); bottomup(try(?NoRename(<id>)))
   rename-decl(|renamings) = fail 
 
 rules
