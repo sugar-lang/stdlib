@@ -27,6 +27,8 @@ strategies
   internal-main = traverse(desugar); unlock
   main = io-wrap(internal-main)
   
+  disambiguate = fail
+  
 strategies
   debug-strat(what, s) =
     debug-analysis(!<conc-strings>("IN ", <what>, ": "));
