@@ -1,6 +1,7 @@
 package org.sugarj.stdlib;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +11,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.spoofax.interpreter.terms.IStrategoTerm;
+import org.spoofax.jsglr.client.InvalidParseTableException;
+import org.spoofax.jsglr.client.ParseException;
+import org.spoofax.jsglr.client.SGLR;
+import org.spoofax.jsglr.client.imploder.TreeBuilder;
+import org.spoofax.jsglr.shared.BadTokenException;
+import org.spoofax.jsglr.shared.SGLRException;
+import org.spoofax.jsglr.shared.TokenExpectedException;
+import org.sugarj.common.ATermCommands;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.path.Path;
@@ -79,17 +89,47 @@ public class StdLib {
     return f;
   }
   
-  public static Path sdfDef = ensureFile("org/sugarj/languages/Sdf2.def");
-  public static Path sdfTbl = ensureFile("org/sugarj/languages/Sdf2.tbl");
-  public static Path strategoDef = ensureFile("org/sugarj/languages/Stratego.def");
-  public static Path strategoTbl = ensureFile("org/sugarj/languages/Stratego.tbl");
-  public static Path editorServicesDef = ensureFile("org/sugarj/languages/EditorServices.def");
-  public static Path editorServicesTbl = ensureFile("org/sugarj/languages/EditorServices.tbl");
+  public final static Path sdfDef = ensureFile("org/sugarj/languages/Sdf2.def");
+  public final static Path sdfTbl = ensureFile("org/sugarj/languages/Sdf2.tbl");
+  public static SGLR sdfParser;
+  static {
+    try {
+      sdfParser = new SGLR(new TreeBuilder(), ATermCommands.parseTableManager.loadFromFile(StdLib.sdfTbl.getAbsolutePath()));
+    } catch (IOException | InvalidParseTableException e) {
+      e.printStackTrace();
+    }
+  }
+  
+  public final static Path strategoDef = ensureFile("org/sugarj/languages/Stratego.def");
+  public final static Path strategoTbl = ensureFile("org/sugarj/languages/Stratego.tbl");
+  public static SGLR strategoParser;
+  static {
+    try {
+      strategoParser = new SGLR(new TreeBuilder(), ATermCommands.parseTableManager.loadFromFile(StdLib.strategoTbl.getAbsolutePath()));
+    } catch (IOException | InvalidParseTableException e) {
+      e.printStackTrace();
+    }
+  }
+  
+  public final static Path editorServicesDef = ensureFile("org/sugarj/languages/EditorServices.def");
+  public final static Path editorServicesTbl = ensureFile("org/sugarj/languages/EditorServices.tbl");
+  public final static Path stdEditor = ensureFile("org/sugarj/stdlib/StdEditor.serv");
+  public static SGLR editorServicesParser;
+  public static List<IStrategoTerm> stdEditirServices;
+  static {
+    try {
+      editorServicesParser = new SGLR(new TreeBuilder(), ATermCommands.parseTableManager.loadFromFile(StdLib.editorServicesTbl.getAbsolutePath()));
+      stdEditirServices = ATermCommands.parseEditorServiceFile(editorServicesParser, StdLib.stdEditor);
+    } catch (IOException | InvalidParseTableException | SGLRException | InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+  
   public static Path plainDef = ensureFile("org/sugarj/languages/Plain.def");
   public static Path commonDef = ensureFile("org/sugarj/stdlib/Common.def");
   public static Path sugarDef = ensureFile("org/sugarj/languages/Sugar.def");
   public static Path modelDef = ensureFile("org/sugarj/languages/Model.def");
-  public static Path stdEditor = ensureFile("org/sugarj/stdlib/StdEditor.serv");
+  
   public static Path failureTrans = ensureFile("failure-trans.jar");
 
   public static List<Path> stdGrammars() {
