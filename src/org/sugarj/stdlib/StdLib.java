@@ -1,7 +1,6 @@
 package org.sugarj.stdlib;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,12 +12,9 @@ import java.util.List;
 import org.eclipse.core.runtime.FileLocator;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.jsglr.client.InvalidParseTableException;
-import org.spoofax.jsglr.client.ParseException;
 import org.spoofax.jsglr.client.SGLR;
 import org.spoofax.jsglr.client.imploder.TreeBuilder;
-import org.spoofax.jsglr.shared.BadTokenException;
 import org.spoofax.jsglr.shared.SGLRException;
-import org.spoofax.jsglr.shared.TokenExpectedException;
 import org.sugarj.common.ATermCommands;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.path.AbsolutePath;
