@@ -6,7 +6,7 @@ Bundle-Version: 1.2.0.qualifier
 Bundle-Activator: org.sugarj.stdlib.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.sugarj.common,
+ org.sugarj.common.cleardep,
  org.spoofax.terms,
  org.strategoxt.strj,
  org.spoofax.interpreter.core,
